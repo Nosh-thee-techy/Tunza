@@ -1,17 +1,28 @@
 {
-  "name": "Tunza",
+  "name": "Tunza - Safe Space for Support",
   "short_name": "Tunza",
-  "description": "Safe space for support",
+  "description": "A safe, private space for support and guidance",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f7f5f2",
-  "theme_color": "#f7f5f2",
+  "theme_color": "#5a8a70",
   "orientation": "portrait",
   "icons": [
     {
-      "src": "/favicon.ico",
-      "sizes": "64x64",
-      "type": "image/x-icon"
+      "src": "/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }
