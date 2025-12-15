@@ -14,7 +14,14 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      },
+      fontSize: {
+        // SafeTalk scale - clear, readable
+        'headline': ['1.75rem', { lineHeight: '1.3', letterSpacing: '-0.01em' }],
+        'subhead': ['1.25rem', { lineHeight: '1.4' }],
+        'body': ['1rem', { lineHeight: '1.6' }],
+        'small': ['0.875rem', { lineHeight: '1.5' }],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -50,16 +57,24 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Tunza custom colors
-        tunza: {
-          sage: "hsl(var(--tunza-sage))",
-          "sage-light": "hsl(var(--tunza-sage-light))",
-          sand: "hsl(var(--tunza-sand))",
-          earth: "hsl(var(--tunza-earth))",
-          "earth-light": "hsl(var(--tunza-earth-light))",
-          sky: "hsl(var(--tunza-sky))",
-          "sky-light": "hsl(var(--tunza-sky-light))",
-          warm: "hsl(var(--tunza-warm))",
+        // SafeTalk custom colors
+        sage: {
+          DEFAULT: "hsl(var(--sage))",
+          light: "hsl(var(--sage-light))",
+        },
+        sand: {
+          DEFAULT: "hsl(var(--sand))",
+          light: "hsl(var(--sand-light))",
+        },
+        sky: {
+          DEFAULT: "hsl(var(--sky))",
+          light: "hsl(var(--sky-light))",
+        },
+        charcoal: "hsl(var(--charcoal))",
+        slate: "hsl(var(--slate))",
+        amber: {
+          DEFAULT: "hsl(var(--amber))",
+          light: "hsl(var(--amber-light))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -78,10 +93,17 @@ export default {
         sm: "calc(var(--radius) - 4px)",
         xl: "calc(var(--radius) + 4px)",
         "2xl": "calc(var(--radius) + 8px)",
+        "3xl": "1.5rem",
       },
       boxShadow: {
         soft: "var(--shadow-soft)",
         card: "var(--shadow-card)",
+        gentle: "var(--shadow-gentle)",
+      },
+      spacing: {
+        // 8pt grid system
+        '18': '4.5rem',
+        '22': '5.5rem',
       },
       keyframes: {
         "accordion-down": {

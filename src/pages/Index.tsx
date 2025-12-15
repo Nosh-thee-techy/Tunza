@@ -5,11 +5,12 @@ import ChatInterface from "@/components/ChatInterface";
 import ResourcesScreen from "@/components/ResourcesScreen";
 import ConcernedObserverFlow from "@/components/ConcernedObserverFlow";
 import ReturnFlow from "@/components/ReturnFlow";
+import EmergencyFlow from "@/components/EmergencyFlow";
 import QuickExitButton from "@/components/QuickExitButton";
 import { InstallPrompt } from "@/components/InstallPrompt";
 import { Language } from "@/components/LanguageSelector";
 
-type Screen = "entry" | "voice" | "chat" | "resources" | "observer" | "return";
+type Screen = "entry" | "voice" | "chat" | "resources" | "observer" | "return" | "emergency";
 
 interface LoadedCase {
   messages: Array<{ id: string; role: "assistant" | "user"; content: string }>;
@@ -139,6 +140,15 @@ const Index = () => {
           language={language}
           onBack={handleBack}
           onCaseLoaded={handleCaseLoaded}
+        />
+      )}
+
+      {currentScreen === "emergency" && (
+        <EmergencyFlow
+          language={language}
+          onBack={handleBack}
+          onDecline={() => setCurrentScreen("chat")}
+          riskLevel="high"
         />
       )}
     </>

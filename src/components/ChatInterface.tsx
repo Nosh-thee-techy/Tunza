@@ -237,7 +237,7 @@ const ChatInterface = ({
           <Button variant="ghost" size="sm" onClick={onBack}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
-          <div className="text-sm font-medium text-foreground">
+          <div className="text-small font-medium text-foreground">
             {language === "en" && "Safe Chat"}
             {language === "sw" && "Chat Salama"}
             {language === "sheng" && "Chat Safe"}
@@ -249,13 +249,13 @@ const ChatInterface = ({
             {showMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-                <div className="absolute top-full right-0 mt-1 bg-card border border-border rounded-xl shadow-card z-50 overflow-hidden min-w-[160px] animate-fade-in">
+                <div className="absolute top-full right-0 mt-1 bg-card border border-border rounded-2xl shadow-card z-50 overflow-hidden min-w-[160px] animate-fade-in">
                   <button
                     onClick={() => {
                       setShowMenu(false);
                       setShowSaveDialog(true);
                     }}
-                    className="w-full text-left px-4 py-3 text-sm flex items-center gap-3 hover:bg-secondary transition-colors"
+                    className="w-full text-left px-4 py-3 text-small flex items-center gap-3 hover:bg-secondary transition-colors"
                   >
                     <Save className="h-4 w-4 text-muted-foreground" />
                     {menuContent[language].save}
@@ -268,8 +268,8 @@ const ChatInterface = ({
 
         {/* Saved indicator */}
         {currentCaseId && (
-          <div className="px-4 py-2 bg-tunza-sage-light/50 text-center">
-            <p className="text-xs text-primary">
+          <div className="px-4 py-2 bg-sage-light/50 text-center">
+            <p className="text-small text-primary">
               {language === "en" && `Saved • Code: ${currentCaseId}`}
               {language === "sw" && `Imehifadhiwa • Msimbo: ${currentCaseId}`}
               {language === "sheng" && `Imesave • Code: ${currentCaseId}`}
@@ -288,25 +288,25 @@ const ChatInterface = ({
               style={{ animationDelay: `${index * 30}ms` }}
             >
               <div
-                className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                className={`max-w-[85%] rounded-3xl px-5 py-3.5 ${
                   message.role === "user"
-                    ? "bg-primary text-primary-foreground rounded-br-md"
-                    : "bg-card border border-border rounded-bl-md"
+                    ? "bg-primary text-primary-foreground rounded-br-lg"
+                    : "bg-sand border border-border rounded-bl-lg"
                 }`}
               >
-                <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                <p className="text-body leading-relaxed whitespace-pre-wrap">{message.content}</p>
               </div>
             </div>
           ))}
 
-          {/* Typing indicator */}
+          {/* Typing indicator - human-like soft dots */}
           {isTyping && (
             <div className="flex justify-start animate-fade-in">
-              <div className="bg-card border border-border rounded-2xl rounded-bl-md px-4 py-3">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                  <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                  <div className="w-2 h-2 bg-muted-foreground/50 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+              <div className="bg-sand border border-border rounded-3xl rounded-bl-lg px-5 py-4">
+                <div className="flex gap-1.5">
+                  <div className="typing-dot" />
+                  <div className="typing-dot" />
+                  <div className="typing-dot" />
                 </div>
               </div>
             </div>
@@ -317,7 +317,7 @@ const ChatInterface = ({
 
         {/* Quick replies */}
         {showQuickReplies && (
-          <div className="px-4 pb-2">
+          <div className="px-4 pb-3">
             <div className="flex flex-wrap gap-2">
               {quickReplies[language].map((reply) => (
                 <Button
@@ -358,15 +358,15 @@ const ChatInterface = ({
                     : "Andika message yako..."
                 }
                 rows={1}
-                className="w-full resize-none rounded-xl border border-input bg-background px-4 py-3 text-[15px] placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
-                style={{ minHeight: "48px", maxHeight: "120px" }}
+                className="w-full resize-none rounded-2xl border border-input bg-background px-5 py-3.5 text-body placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent"
+                style={{ minHeight: "52px", maxHeight: "120px" }}
               />
             </div>
             <Button
               type="submit"
               size="icon"
               disabled={!inputValue.trim() || isTyping}
-              className="rounded-xl flex-shrink-0"
+              className="rounded-2xl flex-shrink-0"
             >
               <Send className="h-5 w-5" />
             </Button>
