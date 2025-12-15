@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Phone, PhoneOff, ArrowLeft, MessageCircle, Loader2, Mic, Volume2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Phone, PhoneOff, ArrowLeft, MessageCircle, Loader2, Mic, Volume2, Pause, Play, Hand, CheckCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import { Language } from "./LanguageSelector";
 import LanguageSelector from "./LanguageSelector";
@@ -26,6 +26,7 @@ const content = {
     listening: "I'm listening...",
     speaking: "Speaking...",
     processing: "Processing...",
+    paused: "Take your time",
     end: "End Conversation",
     switchToChat: "Switch to chat",
     reassurance: "Take your time. There's no rush.",
@@ -33,6 +34,11 @@ const content = {
     languageLabel: "Speaking:",
     error: "Connection failed. Please try again.",
     micPermission: "Please allow microphone access to continue.",
+    pause: "Pause",
+    resume: "Resume",
+    imDone: "I'm done speaking",
+    thinking: "Let me think...",
+    pausedMessage: "Paused. Take a breath. Continue when ready.",
   },
   sw: {
     ready: "Unaweza kuongea kwa uhuru",
@@ -43,6 +49,7 @@ const content = {
     listening: "Nasikiliza...",
     speaking: "Inaongea...",
     processing: "Inashughulikia...",
+    paused: "Chukua wakati wako",
     end: "Maliza Mazungumzo",
     switchToChat: "Badilisha kwa chat",
     reassurance: "Chukua wakati wako. Hakuna haraka.",
@@ -50,6 +57,11 @@ const content = {
     languageLabel: "Inaongea:",
     error: "Muunganisho umeshindikana. Tafadhali jaribu tena.",
     micPermission: "Tafadhali ruhusu ufikiaji wa maikrofoni ili kuendelea.",
+    pause: "Simamisha",
+    resume: "Endelea",
+    imDone: "Nimemaliza kusema",
+    thinking: "Ninafikiri...",
+    pausedMessage: "Imesimamishwa. Pumzika kidogo. Endelea ukiwa tayari.",
   },
   sheng: {
     ready: "Unaweza ongea free",
@@ -60,6 +72,7 @@ const content = {
     listening: "Nakuskia...",
     speaking: "Inaongea...",
     processing: "Inaprocess...",
+    paused: "Chukua time yako",
     end: "End Conversation",
     switchToChat: "Switch kwa chat",
     reassurance: "Chukua time yako. Hakuna pressure.",
@@ -67,16 +80,23 @@ const content = {
     languageLabel: "Tunaongea:",
     error: "Connection imefail. Jaribu tena.",
     micPermission: "Ruhusu mic access ili tuendelee.",
+    pause: "Pause",
+    resume: "Resume",
+    imDone: "Nimemaliza kuongea",
+    thinking: "Nafikiri...",
+    pausedMessage: "Imepause. Breathe kidogo. Continue ukiwa ready.",
   },
 };
 
-type VoiceState = "idle" | "connecting" | "listening" | "processing" | "speaking" | "error";
+type VoiceState = "idle" | "connecting" | "listening" | "processing" | "speaking" | "paused" | "error";
 
 const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat, onEmergencyTriggered }: VoiceInterfaceProps) => {
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [userTranscript, setUserTranscript] = useState("");
+  const [pendingTranscript, setPendingTranscript] = useState("");
   const [aiResponse, setAiResponse] = useState("");
   const [conversationHistory, setConversationHistory] = useState<Array<{role: string; content: string}>>([]);
+  const [isPaused, setIsPaused] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
   const t = content[language];
@@ -93,15 +113,47 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat, on
   const scribe = useScribe({
     modelId: "scribe_v2_realtime",
     onPartialTranscript: (data) => {
-      setUserTranscript(data.text);
+      if (!isPaused) {
+        setPendingTranscript(data.text);
+      }
     },
     onCommittedTranscript: async (data) => {
       console.log("User said:", data.text);
-      if (data.text.trim()) {
-        await processUserSpeech(data.text);
+      if (data.text.trim() && !isPaused) {
+        setUserTranscript(prev => prev ? `${prev} ${data.text}` : data.text);
+        setPendingTranscript("");
       }
     },
   });
+
+  // Handle "I'm done speaking" - commit and process
+  const handleDoneSpeaking = async () => {
+    if (scribe.isConnected) {
+      scribe.commit();
+    }
+    
+    const fullTranscript = userTranscript + (pendingTranscript ? ` ${pendingTranscript}` : "");
+    if (fullTranscript.trim()) {
+      setPendingTranscript("");
+      await processUserSpeech(fullTranscript.trim());
+    }
+  };
+
+  // Pause/Resume conversation
+  const togglePause = () => {
+    if (isPaused) {
+      // Resume
+      setIsPaused(false);
+      setVoiceState("listening");
+    } else {
+      // Pause - stop listening temporarily
+      setIsPaused(true);
+      setVoiceState("paused");
+      if (audioRef.current && !audioRef.current.paused) {
+        audioRef.current.pause();
+      }
+    }
+  };
 
   const processUserSpeech = async (userText: string) => {
     setVoiceState("processing");
@@ -383,12 +435,48 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat, on
                 {t.reassurance}
               </p>
             </div>
+          ) : voiceState === "paused" ? (
+            // Paused state
+            <div className="text-center animate-fade-in">
+              <div className="mb-8">
+                <div className="w-44 h-44 rounded-full bg-sand mx-auto flex items-center justify-center relative">
+                  <Pause className="h-14 w-14 text-muted-foreground" />
+                </div>
+              </div>
+              <h2 className="text-headline font-medium text-foreground mb-3">
+                {t.paused}
+              </h2>
+              <p className="text-body text-muted-foreground mb-8">
+                {t.pausedMessage}
+              </p>
+              
+              <div className="space-y-3">
+                <Button
+                  variant="default"
+                  size="lg"
+                  onClick={togglePause}
+                  className="gap-2 w-full max-w-xs"
+                >
+                  <Play className="h-5 w-5" />
+                  {t.resume}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={endConversation}
+                  className="gap-2 w-full max-w-xs border-amber/30 text-amber hover:bg-amber-light"
+                >
+                  <PhoneOff className="h-5 w-5" />
+                  {t.end}
+                </Button>
+              </div>
+            </div>
           ) : (
             // Active state (listening, processing, or speaking)
             <div className="text-center animate-fade-in">
               {/* Voice visualization - slow organic movement */}
-              <div className="mb-8">
-                <div className="w-44 h-44 rounded-full bg-sage-light mx-auto flex items-center justify-center relative">
+              <div className="mb-6">
+                <div className="w-40 h-40 rounded-full bg-sage-light mx-auto flex items-center justify-center relative">
                   {voiceState === "speaking" ? (
                     // AI is speaking - show slow animated waves
                     <div className="flex items-center justify-center gap-1.5 h-12">
@@ -415,22 +503,27 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat, on
                 </div>
               </div>
 
-              <h2 className="text-headline font-medium text-foreground mb-3">
+              <h2 className="text-headline font-medium text-foreground mb-2">
                 {voiceState === "speaking" 
                   ? t.speaking 
                   : voiceState === "processing"
-                  ? t.processing
+                  ? t.thinking
                   : t.listening}
               </h2>
               
-              {/* User transcript display */}
-              {userTranscript && voiceState === "listening" && (
+              {/* Live transcript display */}
+              {(userTranscript || pendingTranscript) && voiceState === "listening" && (
                 <div className="bg-card border border-border rounded-2xl p-4 mb-4 max-w-xs mx-auto">
                   <div className="flex items-center gap-2 mb-1">
                     <Mic className="h-3 w-3 text-muted-foreground" />
                     <span className="text-small text-muted-foreground">You</span>
                   </div>
-                  <p className="text-body text-foreground">{userTranscript}</p>
+                  <p className="text-body text-foreground">
+                    {userTranscript}
+                    {pendingTranscript && (
+                      <span className="text-muted-foreground"> {pendingTranscript}...</span>
+                    )}
+                  </p>
                 </div>
               )}
 
@@ -445,20 +538,47 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat, on
                 </div>
               )}
               
-              <p className="text-body text-muted-foreground mb-8">
+              <p className="text-small text-muted-foreground mb-6">
                 {t.reassurance}
               </p>
 
-              {/* End button - uses amber, not red */}
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={endConversation}
-                className="gap-2 border-amber/30 text-amber hover:bg-amber-light"
-              >
-                <PhoneOff className="h-5 w-5" />
-                {t.end}
-              </Button>
+              {/* Conversation controls */}
+              <div className="space-y-3 max-w-xs mx-auto">
+                {/* "I'm done speaking" button - prominent when listening */}
+                {voiceState === "listening" && (userTranscript || pendingTranscript) && (
+                  <Button
+                    variant="default"
+                    size="lg"
+                    onClick={handleDoneSpeaking}
+                    className="gap-2 w-full"
+                  >
+                    <CheckCircle className="h-5 w-5" />
+                    {t.imDone}
+                  </Button>
+                )}
+                
+                {/* Pause/End row */}
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={togglePause}
+                    className="gap-2 flex-1"
+                  >
+                    <Pause className="h-5 w-5" />
+                    {t.pause}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    onClick={endConversation}
+                    className="gap-2 flex-1 border-amber/30 text-amber hover:bg-amber-light"
+                  >
+                    <PhoneOff className="h-5 w-5" />
+                    {t.end}
+                  </Button>
+                </div>
+              </div>
             </div>
           )}
         </div>

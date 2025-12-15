@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { ArrowLeft, Send, Save, MoreVertical, Trash2 } from "lucide-react";
+import { ArrowLeft, Send, Save, MoreVertical, Trash2, Download } from "lucide-react";
 import { Button } from "./ui/button";
 import { Language } from "./LanguageSelector";
 import SaveCaseDialog from "./SaveCaseDialog";
 import DeleteCaseDialog from "./DeleteCaseDialog";
+import ExportCaseDialog from "./ExportCaseDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useRiskDetection } from "@/hooks/useRiskDetection";
 
@@ -56,9 +57,9 @@ const quickReplies: Record<Language, string[]> = {
 };
 
 const menuContent = {
-  en: { save: "Save for later", delete: "Delete conversation" },
-  sw: { save: "Hifadhi kwa baadaye", delete: "Futa mazungumzo" },
-  sheng: { save: "Save for later", delete: "Delete conversation" },
+  en: { save: "Save for later", delete: "Delete conversation", export: "Export" },
+  sw: { save: "Hifadhi kwa baadaye", delete: "Futa mazungumzo", export: "Hamisha" },
+  sheng: { save: "Save for later", delete: "Delete conversation", export: "Export" },
 };
 
 const ChatInterface = ({ 
@@ -280,6 +281,13 @@ const ChatInterface = ({
                     <Save className="h-4 w-4 text-muted-foreground" />
                     {menuContent[language].save}
                   </button>
+                  <div onClick={() => setShowMenu(false)}>
+                    <ExportCaseDialog
+                      language={language}
+                      messages={messages.map(m => ({ role: m.role, content: m.content }))}
+                      caseId={currentCaseId}
+                    />
+                  </div>
                   {currentCaseId && (
                     <button
                       onClick={() => {
