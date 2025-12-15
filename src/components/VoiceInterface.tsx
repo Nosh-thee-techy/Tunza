@@ -7,6 +7,7 @@ import { useScribe } from "@elevenlabs/react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useRiskDetection } from "@/hooks/useRiskDetection";
+import { useVoiceFeedback } from "@/hooks/useVoiceFeedback";
 
 interface VoiceInterfaceProps {
   language: Language;
@@ -98,7 +99,9 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat, on
   const [conversationHistory, setConversationHistory] = useState<Array<{role: string; content: string}>>([]);
   const [isPaused, setIsPaused] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const prevVoiceStateRef = useRef<VoiceState>("idle");
   const { toast } = useToast();
+  const { playStartListening, playStopListening, playPause, playResume } = useVoiceFeedback();
   const t = content[language];
 
   // Risk detection hook
@@ -145,15 +148,35 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat, on
       // Resume
       setIsPaused(false);
       setVoiceState("listening");
+      playResume();
     } else {
       // Pause - stop listening temporarily
       setIsPaused(true);
       setVoiceState("paused");
+      playPause();
       if (audioRef.current && !audioRef.current.paused) {
         audioRef.current.pause();
       }
     }
   };
+
+  // Play audio feedback when voice state changes
+  useEffect(() => {
+    const prevState = prevVoiceStateRef.current;
+    const currentState = voiceState;
+    
+    // Play start listening chime when transitioning TO listening
+    if (currentState === "listening" && prevState !== "listening" && prevState !== "idle") {
+      playStartListening();
+    }
+    
+    // Play stop listening chime when transitioning FROM listening to processing/speaking
+    if ((currentState === "processing" || currentState === "speaking") && prevState === "listening") {
+      playStopListening();
+    }
+    
+    prevVoiceStateRef.current = currentState;
+  }, [voiceState, playStartListening, playStopListening]);
 
   const processUserSpeech = async (userText: string) => {
     setVoiceState("processing");
