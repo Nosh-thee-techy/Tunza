@@ -3,3 +3,7 @@ project_id = "cxyogenzpxxttpyasgwt"
 [functions.tunza-chat]
 enabled = true
 verify_jwt = false
+
+[functions.voice-session]
+enabled = true
+verify_jwt = false
