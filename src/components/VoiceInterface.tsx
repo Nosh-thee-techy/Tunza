@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Phone, PhoneOff, ArrowLeft, MessageCircle, Loader2 } from "lucide-react";
+import { Phone, PhoneOff, ArrowLeft, MessageCircle, Loader2, Mic, Volume2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Language } from "./LanguageSelector";
 import LanguageSelector from "./LanguageSelector";
-import { RealtimeVoiceChat, RealtimeChatEvent } from "@/utils/RealtimeVoice";
+import { useScribe } from "@elevenlabs/react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface VoiceInterfaceProps {
   language: Language;
@@ -22,6 +23,7 @@ const content = {
     connected: "Connected",
     listening: "I'm listening...",
     speaking: "Speaking...",
+    processing: "Processing...",
     end: "End Conversation",
     switchToChat: "Switch to chat",
     reassurance: "Take your time. There's no rush.",
@@ -38,6 +40,7 @@ const content = {
     connected: "Imeunganishwa",
     listening: "Nasikiliza...",
     speaking: "Inaongea...",
+    processing: "Inashughulikia...",
     end: "Maliza Mazungumzo",
     switchToChat: "Badilisha kwa chat",
     reassurance: "Chukua wakati wako. Hakuna haraka.",
@@ -54,6 +57,7 @@ const content = {
     connected: "Ime-connect",
     listening: "Nakuskia...",
     speaking: "Inaongea...",
+    processing: "Inaprocess...",
     end: "End Conversation",
     switchToChat: "Switch kwa chat",
     reassurance: "Chukua time yako. Hakuna pressure.",
@@ -64,72 +68,159 @@ const content = {
   },
 };
 
-type ConnectionState = "idle" | "connecting" | "connected" | "error";
+type VoiceState = "idle" | "connecting" | "listening" | "processing" | "speaking" | "error";
 
 const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: VoiceInterfaceProps) => {
-  const [connectionState, setConnectionState] = useState<ConnectionState>("idle");
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [transcript, setTranscript] = useState("");
-  const voiceChatRef = useRef<RealtimeVoiceChat | null>(null);
+  const [voiceState, setVoiceState] = useState<VoiceState>("idle");
+  const [userTranscript, setUserTranscript] = useState("");
+  const [aiResponse, setAiResponse] = useState("");
+  const [conversationHistory, setConversationHistory] = useState<Array<{role: string; content: string}>>([]);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
   const t = content[language];
 
-  const handleMessage = useCallback((event: RealtimeChatEvent) => {
-    console.log("Voice event:", event.type);
-    
-    switch (event.type) {
-      case "response.audio.delta":
-        setIsSpeaking(true);
-        break;
-      case "response.audio.done":
-        setIsSpeaking(false);
-        break;
-      case "response.audio_transcript.delta":
-        // AI is responding with text
-        if (typeof event.delta === "string") {
-          setTranscript((prev) => prev + event.delta);
-        }
-        break;
-      case "response.audio_transcript.done":
-        // Response complete
-        setTimeout(() => setTranscript(""), 3000);
-        break;
-      case "input_audio_buffer.speech_started":
-        // User started speaking
-        setTranscript("");
-        break;
-      case "conversation.item.input_audio_transcription.completed":
-        // User's speech was transcribed
-        console.log("User said:", event.transcript);
-        break;
-      case "error":
-        console.error("Voice error:", event);
-        toast({
-          title: language === "en" ? "Error" : language === "sw" ? "Kosa" : "Error",
-          description: t.error,
-          variant: "destructive",
-        });
-        break;
-    }
-  }, [language, t.error, toast]);
+  // ElevenLabs Speech-to-Text hook
+  const scribe = useScribe({
+    modelId: "scribe_v2_realtime",
+    onPartialTranscript: (data) => {
+      setUserTranscript(data.text);
+    },
+    onCommittedTranscript: async (data) => {
+      console.log("User said:", data.text);
+      if (data.text.trim()) {
+        await processUserSpeech(data.text);
+      }
+    },
+  });
 
-  const handleConnectionChange = useCallback((connected: boolean) => {
-    console.log("Connection state changed:", connected);
-    if (connected) {
-      setConnectionState("connected");
-    } else if (connectionState === "connecting") {
-      setConnectionState("error");
-    } else {
-      setConnectionState("idle");
+  const processUserSpeech = async (userText: string) => {
+    setVoiceState("processing");
+    setUserTranscript(userText);
+
+    try {
+      // Add user message to history
+      const newHistory = [...conversationHistory, { role: "user", content: userText }];
+      setConversationHistory(newHistory);
+
+      // Get AI response via tunza-chat
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tunza-chat`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            messages: newHistory.map(m => ({ role: m.role, content: m.content })),
+            language,
+            context: "general",
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to get AI response");
+      }
+
+      // Parse streaming response
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      let fullResponse = "";
+
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          const chunk = decoder.decode(value);
+          const lines = chunk.split("\n");
+          
+          for (const line of lines) {
+            if (line.startsWith("data: ") && line !== "data: [DONE]") {
+              try {
+                const parsed = JSON.parse(line.slice(6));
+                const content = parsed.choices?.[0]?.delta?.content;
+                if (content) {
+                  fullResponse += content;
+                }
+              } catch {
+                // Skip invalid JSON
+              }
+            }
+          }
+        }
+      }
+
+      if (fullResponse) {
+        setAiResponse(fullResponse);
+        setConversationHistory([...newHistory, { role: "assistant", content: fullResponse }]);
+        
+        // Convert to speech using ElevenLabs TTS
+        await speakResponse(fullResponse);
+      }
+    } catch (error) {
+      console.error("Processing error:", error);
+      toast({
+        title: language === "en" ? "Error" : "Kosa",
+        description: t.error,
+        variant: "destructive",
+      });
+      setVoiceState("listening");
     }
-  }, [connectionState]);
+  };
+
+  const speakResponse = async (text: string) => {
+    setVoiceState("speaking");
+    
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-voice`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            action: "tts",
+            text,
+            language,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("TTS failed");
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      if (audioRef.current) {
+        audioRef.current.src = audioUrl;
+        audioRef.current.onended = () => {
+          setVoiceState("listening");
+          setAiResponse("");
+          URL.revokeObjectURL(audioUrl);
+        };
+        await audioRef.current.play();
+      }
+    } catch (error) {
+      console.error("TTS error:", error);
+      setVoiceState("listening");
+    }
+  };
 
   const startConversation = async () => {
     try {
-      setConnectionState("connecting");
-      setTranscript("");
+      setVoiceState("connecting");
+      setUserTranscript("");
+      setAiResponse("");
       
-      // Check microphone permission first
+      // Check microphone permission
       try {
         await navigator.mediaDevices.getUserMedia({ audio: true });
       } catch {
@@ -138,21 +229,43 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: 
           description: t.micPermission,
           variant: "destructive",
         });
-        setConnectionState("idle");
+        setVoiceState("idle");
         return;
       }
 
-      voiceChatRef.current = new RealtimeVoiceChat(
-        handleMessage,
-        handleConnectionChange,
-        language
-      );
-      
-      await voiceChatRef.current.init();
-      
+      // Get STT token from ElevenLabs
+      const { data, error } = await supabase.functions.invoke("elevenlabs-voice", {
+        body: { action: "stt_token", language },
+      });
+
+      if (error || !data?.token) {
+        throw new Error("Failed to get voice token");
+      }
+
+      // Connect to ElevenLabs Scribe
+      await scribe.connect({
+        token: data.token,
+        microphone: {
+          echoCancellation: true,
+          noiseSuppression: true,
+        },
+      });
+
+      setVoiceState("listening");
+
+      // Play initial greeting
+      const greetings = {
+        en: "Hello. I'm here to listen. Take your time and share what's on your mind when you're ready.",
+        sw: "Habari. Niko hapa kusikiliza. Chukua wakati wako na ushiriki unachofikiria unapokuwa tayari.",
+        sheng: "Sasa. Niko hapa kuskia. Chukua time yako na share chenye kiko kwa mind yako ukiwa ready.",
+      };
+
+      await speakResponse(greetings[language]);
+      setConversationHistory([{ role: "assistant", content: greetings[language] }]);
+
     } catch (error) {
       console.error("Error starting conversation:", error);
-      setConnectionState("error");
+      setVoiceState("error");
       toast({
         title: language === "en" ? "Connection Error" : "Kosa",
         description: t.error,
@@ -162,24 +275,30 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: 
   };
 
   const endConversation = () => {
-    voiceChatRef.current?.disconnect();
-    voiceChatRef.current = null;
-    setConnectionState("idle");
-    setIsSpeaking(false);
-    setTranscript("");
+    scribe.disconnect();
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.src = "";
+    }
+    setVoiceState("idle");
+    setUserTranscript("");
+    setAiResponse("");
   };
 
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      voiceChatRef.current?.disconnect();
+      scribe.disconnect();
     };
   }, []);
 
-  const isActive = connectionState === "connected";
+  const isActive = voiceState !== "idle" && voiceState !== "error";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      {/* Hidden audio element for TTS playback */}
+      <audio ref={audioRef} className="hidden" />
+
       {/* Header */}
       <header className="flex items-center justify-between p-4">
         <Button variant="ghost" size="sm" onClick={onBack} className="gap-2">
@@ -198,7 +317,7 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: 
       {/* Main content */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 pb-8">
         <div className="flex-1 flex flex-col items-center justify-center w-full max-w-sm">
-          {connectionState === "idle" || connectionState === "error" ? (
+          {voiceState === "idle" || voiceState === "error" ? (
             // Idle state - Ready to start
             <div className="text-center animate-fade-in">
               <div className="mb-8">
@@ -214,10 +333,10 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: 
               </p>
               <div className="space-y-3">
                 <Button
-                  variant="voice"
-                  size="xl"
+                  variant="default"
+                  size="lg"
                   onClick={startConversation}
-                  className="gap-3 w-full max-w-xs"
+                  className="gap-3 w-full max-w-xs bg-primary hover:bg-primary/90"
                 >
                   <Phone className="h-6 w-6" />
                   {t.start}
@@ -232,11 +351,11 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: 
                   {t.switchToChat}
                 </Button>
               </div>
-              {connectionState === "error" && (
+              {voiceState === "error" && (
                 <p className="text-destructive text-sm mt-4">{t.error}</p>
               )}
             </div>
-          ) : connectionState === "connecting" ? (
+          ) : voiceState === "connecting" ? (
             // Connecting state
             <div className="text-center animate-fade-in">
               <div className="mb-8">
@@ -252,12 +371,12 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: 
               </p>
             </div>
           ) : (
-            // Connected/Active state
+            // Active state (listening, processing, or speaking)
             <div className="text-center animate-fade-in">
-              {/* Sound wave visualization */}
+              {/* Voice visualization */}
               <div className="mb-8">
                 <div className="w-40 h-40 rounded-full bg-tunza-sage-light mx-auto flex items-center justify-center relative">
-                  {isSpeaking ? (
+                  {voiceState === "speaking" ? (
                     // AI is speaking - show animated waves
                     <div className="flex items-center justify-center gap-1 h-12">
                       {[...Array(7)].map((_, i) => (
@@ -268,10 +387,13 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: 
                         />
                       ))}
                     </div>
+                  ) : voiceState === "processing" ? (
+                    // Processing - show loader
+                    <Loader2 className="h-12 w-12 text-primary animate-spin" />
                   ) : (
-                    // Listening - show subtle pulse
+                    // Listening - show mic with pulse
                     <div className="w-16 h-16 rounded-full bg-primary/20 animate-pulse-gentle flex items-center justify-center">
-                      <div className="w-8 h-8 rounded-full bg-primary/40" />
+                      <Mic className="h-8 w-8 text-primary" />
                     </div>
                   )}
                   
@@ -281,13 +403,32 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: 
               </div>
 
               <h2 className="text-2xl font-medium text-foreground mb-3">
-                {isSpeaking ? t.speaking : t.listening}
+                {voiceState === "speaking" 
+                  ? t.speaking 
+                  : voiceState === "processing"
+                  ? t.processing
+                  : t.listening}
               </h2>
               
-              {/* Transcript display */}
-              {transcript && (
-                <div className="bg-card border border-border rounded-xl p-4 mb-6 max-w-xs mx-auto">
-                  <p className="text-sm text-foreground">{transcript}</p>
+              {/* User transcript display */}
+              {userTranscript && voiceState === "listening" && (
+                <div className="bg-card border border-border rounded-xl p-4 mb-4 max-w-xs mx-auto">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Mic className="h-3 w-3 text-muted-foreground" />
+                    <span className="text-xs text-muted-foreground">You</span>
+                  </div>
+                  <p className="text-sm text-foreground">{userTranscript}</p>
+                </div>
+              )}
+
+              {/* AI response display */}
+              {aiResponse && voiceState === "speaking" && (
+                <div className="bg-tunza-sage-light border border-primary/20 rounded-xl p-4 mb-4 max-w-xs mx-auto">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Volume2 className="h-3 w-3 text-primary" />
+                    <span className="text-xs text-primary">Tunza</span>
+                  </div>
+                  <p className="text-sm text-foreground">{aiResponse}</p>
                 </div>
               )}
               
