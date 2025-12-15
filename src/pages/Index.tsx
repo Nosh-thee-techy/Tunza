@@ -3,10 +3,11 @@ import EntryScreen from "@/components/EntryScreen";
 import VoiceInterface from "@/components/VoiceInterface";
 import ChatInterface from "@/components/ChatInterface";
 import ResourcesScreen from "@/components/ResourcesScreen";
+import ConcernedObserverFlow from "@/components/ConcernedObserverFlow";
 import QuickExitButton from "@/components/QuickExitButton";
 import { Language } from "@/components/LanguageSelector";
 
-type Screen = "entry" | "voice" | "chat" | "resources" | "noticed";
+type Screen = "entry" | "voice" | "chat" | "resources" | "observer";
 
 const Index = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>("entry");
@@ -18,8 +19,10 @@ const Index = () => {
         setCurrentScreen("voice");
         break;
       case "chat":
-      case "noticed":
         setCurrentScreen("chat");
+        break;
+      case "noticed":
+        setCurrentScreen("observer");
         break;
       case "info":
         setCurrentScreen("resources");
@@ -57,6 +60,15 @@ const Index = () => {
 
       {currentScreen === "resources" && (
         <ResourcesScreen language={language} onBack={handleBack} />
+      )}
+
+      {currentScreen === "observer" && (
+        <ConcernedObserverFlow
+          language={language}
+          onBack={handleBack}
+          onGoToChat={() => setCurrentScreen("chat")}
+          onGoToResources={() => setCurrentScreen("resources")}
+        />
       )}
     </>
   );
