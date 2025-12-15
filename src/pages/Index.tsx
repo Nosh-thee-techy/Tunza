@@ -6,6 +6,7 @@ import ResourcesScreen from "@/components/ResourcesScreen";
 import ConcernedObserverFlow from "@/components/ConcernedObserverFlow";
 import ReturnFlow from "@/components/ReturnFlow";
 import QuickExitButton from "@/components/QuickExitButton";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { Language } from "@/components/LanguageSelector";
 
 type Screen = "entry" | "voice" | "chat" | "resources" | "observer" | "return";
@@ -89,6 +90,9 @@ const Index = () => {
     <>
       {/* Quick exit button - always visible */}
       <QuickExitButton />
+      
+      {/* Discreet install prompt */}
+      <InstallPrompt />
 
       {/* Screen router */}
       {currentScreen === "entry" && (
