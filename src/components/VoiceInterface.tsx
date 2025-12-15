@@ -6,12 +6,14 @@ import LanguageSelector from "./LanguageSelector";
 import { useScribe } from "@elevenlabs/react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useRiskDetection } from "@/hooks/useRiskDetection";
 
 interface VoiceInterfaceProps {
   language: Language;
   onLanguageChange: (lang: Language) => void;
   onBack: () => void;
   onSwitchToChat: () => void;
+  onEmergencyTriggered?: () => void;
 }
 
 const content = {
@@ -70,7 +72,7 @@ const content = {
 
 type VoiceState = "idle" | "connecting" | "listening" | "processing" | "speaking" | "error";
 
-const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: VoiceInterfaceProps) => {
+const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat, onEmergencyTriggered }: VoiceInterfaceProps) => {
   const [voiceState, setVoiceState] = useState<VoiceState>("idle");
   const [userTranscript, setUserTranscript] = useState("");
   const [aiResponse, setAiResponse] = useState("");
@@ -78,6 +80,14 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: 
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
   const t = content[language];
+
+  // Risk detection hook
+  const { assessMessage } = useRiskDetection({
+    onHighRisk: () => {
+      console.log("High risk detected in voice - triggering emergency flow");
+      onEmergencyTriggered?.();
+    },
+  });
 
   // ElevenLabs Speech-to-Text hook
   const scribe = useScribe({
@@ -96,6 +106,9 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: 
   const processUserSpeech = async (userText: string) => {
     setVoiceState("processing");
     setUserTranscript(userText);
+
+    // Assess risk silently in background
+    assessMessage(userText, conversationHistory);
 
     try {
       // Add user message to history

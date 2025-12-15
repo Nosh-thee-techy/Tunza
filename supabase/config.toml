@@ -35,3 +35,7 @@ verify_jwt = false
 [functions.partner-handoff]
 enabled = true
 verify_jwt = false
+
+[functions.data-retention]
+enabled = true
+verify_jwt = false
