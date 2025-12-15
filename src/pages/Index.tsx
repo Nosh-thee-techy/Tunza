@@ -12,6 +12,7 @@ type Screen = "entry" | "voice" | "chat" | "resources" | "observer";
 const Index = () => {
   const [currentScreen, setCurrentScreen] = useState<Screen>("entry");
   const [language, setLanguage] = useState<Language>("en");
+  const [chatContext, setChatContext] = useState<"general" | "observer">("general");
 
   const handleSelectOption = (option: string) => {
     switch (option) {
@@ -19,6 +20,7 @@ const Index = () => {
         setCurrentScreen("voice");
         break;
       case "chat":
+        setChatContext("general");
         setCurrentScreen("chat");
         break;
       case "noticed":
@@ -36,6 +38,16 @@ const Index = () => {
     setCurrentScreen("entry");
   };
 
+  const handleSwitchToChat = () => {
+    setChatContext("general");
+    setCurrentScreen("chat");
+  };
+
+  const handleObserverToChat = () => {
+    setChatContext("observer");
+    setCurrentScreen("chat");
+  };
+
   return (
     <>
       {/* Quick exit button - always visible */}
@@ -51,11 +63,20 @@ const Index = () => {
       )}
 
       {currentScreen === "voice" && (
-        <VoiceInterface language={language} onBack={handleBack} />
+        <VoiceInterface
+          language={language}
+          onLanguageChange={setLanguage}
+          onBack={handleBack}
+          onSwitchToChat={handleSwitchToChat}
+        />
       )}
 
       {currentScreen === "chat" && (
-        <ChatInterface language={language} onBack={handleBack} />
+        <ChatInterface
+          language={language}
+          onBack={handleBack}
+          context={chatContext}
+        />
       )}
 
       {currentScreen === "resources" && (
@@ -66,7 +87,7 @@ const Index = () => {
         <ConcernedObserverFlow
           language={language}
           onBack={handleBack}
-          onGoToChat={() => setCurrentScreen("chat")}
+          onGoToChat={handleObserverToChat}
           onGoToResources={() => setCurrentScreen("resources")}
         />
       )}
