@@ -11,3 +11,27 @@ verify_jwt = false
 [functions.case-manager]
 enabled = true
 verify_jwt = false
+
+[functions.intake]
+enabled = true
+verify_jwt = false
+
+[functions.consent-engine]
+enabled = true
+verify_jwt = false
+
+[functions.risk-detector]
+enabled = true
+verify_jwt = false
+
+[functions.ai-guardrails]
+enabled = true
+verify_jwt = false
+
+[functions.elevenlabs-voice]
+enabled = true
+verify_jwt = false
+
+[functions.partner-handoff]
+enabled = true
+verify_jwt = false
