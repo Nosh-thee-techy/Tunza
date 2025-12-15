@@ -1,5 +1,8 @@
 project_id = "cxyogenzpxxttpyasgwt"
 
+[functions.generate-summary]
+verify_jwt = false
+
 [functions.tunza-chat]
 enabled = true
 verify_jwt = false
