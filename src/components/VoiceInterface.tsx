@@ -1,57 +1,73 @@
 import { useState } from "react";
-import { Phone, PhoneOff, Pause, Play, ArrowLeft } from "lucide-react";
+import { Phone, PhoneOff, Pause, Play, ArrowLeft, MessageCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import { Language } from "./LanguageSelector";
+import LanguageSelector from "./LanguageSelector";
 
 interface VoiceInterfaceProps {
   language: Language;
+  onLanguageChange: (lang: Language) => void;
   onBack: () => void;
+  onSwitchToChat: () => void;
 }
-
-const languageLabels: Record<Language, string> = {
-  en: "Speaking: English",
-  sw: "Inaongea: Kiswahili",
-  sheng: "Tunaongea: Sheng",
-};
 
 const content = {
   en: {
-    ready: "Ready when you are",
+    ready: "You can speak freely",
+    subtitle: "You can stop anytime.",
     start: "Start Talking",
     listening: "I'm listening...",
-    pause: "Pause",
+    pause: "Paused",
     resume: "Resume",
     end: "End",
+    switchToChat: "Switch to chat",
     reassurance: "Take your time. There's no rush.",
+    privacy: "This conversation is private and encrypted.",
+    languageLabel: "Speaking:",
   },
   sw: {
-    ready: "Niko tayari ukiwa tayari",
+    ready: "Unaweza kuongea kwa uhuru",
+    subtitle: "Unaweza kusimama wakati wowote.",
     start: "Anza Kuongea",
     listening: "Nasikiliza...",
-    pause: "Simamisha",
+    pause: "Imesimamishwa",
     resume: "Endelea",
     end: "Maliza",
+    switchToChat: "Badilisha kwa chat",
     reassurance: "Chukua wakati wako. Hakuna haraka.",
+    privacy: "Mazungumzo haya ni ya faragha na yamesimbwa.",
+    languageLabel: "Inaongea:",
   },
   sheng: {
-    ready: "Niko ready ukiwa ready",
+    ready: "Unaweza ongea free",
+    subtitle: "Unaweza stop anytime.",
     start: "Anza Kuongea",
     listening: "Nakuskia...",
-    pause: "Pause",
+    pause: "Ime-pause",
     resume: "Endelea",
     end: "Maliza",
-    reassurance: "Pole pole, hakuna pressure.",
+    switchToChat: "Switch kwa chat",
+    reassurance: "Chukua time yako. Hakuna pressure.",
+    privacy: "Hii convo ni private na encrypted.",
+    languageLabel: "Tunaongea:",
   },
+};
+
+const languageNames: Record<Language, string> = {
+  en: "English",
+  sw: "Kiswahili",
+  sheng: "Sheng",
 };
 
 type CallState = "idle" | "active" | "paused";
 
-const VoiceInterface = ({ language, onBack }: VoiceInterfaceProps) => {
+const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: VoiceInterfaceProps) => {
   const [callState, setCallState] = useState<CallState>("idle");
   const t = content[language];
 
   const handleStartCall = () => {
     setCallState("active");
+    // TODO: Implement actual voice recording and streaming
   };
 
   const handlePauseResume = () => {
@@ -70,10 +86,13 @@ const VoiceInterface = ({ language, onBack }: VoiceInterfaceProps) => {
           <ArrowLeft className="h-4 w-4" />
           <span className="sr-only">Back</span>
         </Button>
-        <div className="text-sm text-muted-foreground">
-          {languageLabels[language]}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">{t.languageLabel}</span>
+          <LanguageSelector
+            currentLanguage={language}
+            onLanguageChange={onLanguageChange}
+          />
         </div>
-        <div className="w-10" />
       </header>
 
       {/* Main content */}
@@ -88,21 +107,32 @@ const VoiceInterface = ({ language, onBack }: VoiceInterfaceProps) => {
                   <Phone className="h-12 w-12 text-primary" />
                 </div>
               </div>
-              <h2 className="text-2xl font-medium text-foreground mb-3">
+              <h2 className="text-2xl font-medium text-foreground mb-2">
                 {t.ready}
               </h2>
-              <p className="text-muted-foreground mb-10">
-                {t.reassurance}
+              <p className="text-muted-foreground mb-8">
+                {t.subtitle}
               </p>
-              <Button
-                variant="voice"
-                size="xl"
-                onClick={handleStartCall}
-                className="gap-3"
-              >
-                <Phone className="h-6 w-6" />
-                {t.start}
-              </Button>
+              <div className="space-y-3">
+                <Button
+                  variant="voice"
+                  size="xl"
+                  onClick={handleStartCall}
+                  className="gap-3 w-full max-w-xs"
+                >
+                  <Phone className="h-6 w-6" />
+                  {t.start}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="lg"
+                  onClick={onSwitchToChat}
+                  className="gap-2 w-full max-w-xs"
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  {t.switchToChat}
+                </Button>
+              </div>
             </div>
           ) : (
             // Active or paused state
@@ -174,9 +204,7 @@ const VoiceInterface = ({ language, onBack }: VoiceInterfaceProps) => {
       {/* Footer reassurance */}
       <footer className="p-6 text-center">
         <p className="text-xs text-muted-foreground">
-          {language === "en" && "This conversation is private and encrypted."}
-          {language === "sw" && "Mazungumzo haya ni ya faragha na yamesimbwa."}
-          {language === "sheng" && "Hii convo ni private na encrypted."}
+          {t.privacy}
         </p>
       </footer>
     </div>

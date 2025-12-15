@@ -12,90 +12,91 @@ interface EntryScreenProps {
 
 const content = {
   en: {
-    greeting: "Karibu",
-    subtitle: "You're in a safe space. How would you like to continue?",
+    tagline: "This is a safe place to talk about something that doesn't feel right.",
     options: {
-      noticed: {
-        title: "I noticed something concerning",
-        description: "Something doesn't feel right",
-      },
       voice: {
-        title: "I want to talk",
+        title: "Talk now",
         description: "Have a voice conversation",
       },
       chat: {
-        title: "I want to chat",
+        title: "Chat instead",
         description: "Text with someone who understands",
       },
+      noticed: {
+        title: "I noticed something concerning",
+        description: "About someone else",
+      },
       info: {
-        title: "I just need information",
+        title: "Just looking for information",
         description: "Learn about support and resources",
       },
     },
+    privacy: "Your privacy is protected. No login required.",
   },
   sw: {
-    greeting: "Karibu",
-    subtitle: "Uko mahali salama. Ungependa kuendelea vipi?",
+    tagline: "Hapa ni mahali salama kuongea kuhusu jambo linaloonekana haliko sawa.",
     options: {
-      noticed: {
-        title: "Nimeona jambo la kusumbua",
-        description: "Kuna kitu hakiko sawa",
-      },
       voice: {
-        title: "Nataka kuongea",
+        title: "Ongea sasa",
         description: "Mazungumzo ya sauti",
       },
       chat: {
-        title: "Nataka kuchat",
+        title: "Chat badala yake",
         description: "Andika na mtu anayeelewa",
       },
+      noticed: {
+        title: "Nimeona jambo la kusumbua",
+        description: "Kuhusu mtu mwingine",
+      },
       info: {
-        title: "Nahitaji habari tu",
+        title: "Natafuta habari tu",
         description: "Jifunze kuhusu msaada na rasilimali",
       },
     },
+    privacy: "Faragha yako inalindwa. Hakuna usajili unaohitajika.",
   },
   sheng: {
-    greeting: "Niaje",
-    subtitle: "Uko safe hapa. Unataka tuendelee aje?",
+    tagline: "Hapa ni mahali safe kuongea kuhusu kitu kinachoonekana si poa.",
     options: {
-      noticed: {
-        title: "Nimenotice kitu weird",
-        description: "Kuna kitu haiko poa",
-      },
       voice: {
-        title: "Nataka tuongee",
+        title: "Ongea sasa",
         description: "Voice conversation, moja kwa moja",
       },
       chat: {
-        title: "Nataka tuchat",
+        title: "Chat badala",
         description: "Text na mtu anakuelewa",
       },
+      noticed: {
+        title: "Nime-notice kitu weird",
+        description: "Kuhusu mtu mwingine",
+      },
       info: {
-        title: "Nataka info tu",
+        title: "Natafuta info tu",
         description: "Pata habari kuhusu msaada",
       },
     },
+    privacy: "Privacy yako iko safe. Hakuna login needed.",
   },
 };
 
 const icons = {
-  noticed: Eye,
   voice: Phone,
   chat: MessageCircle,
+  noticed: Eye,
   info: Info,
 };
 
 const EntryScreen = ({ language, onLanguageChange, onSelectOption }: EntryScreenProps) => {
   const t = content[language];
 
-  const options: EntryOption[] = ["noticed", "voice", "chat", "info"];
+  // Order of options matches the workflow
+  const options: EntryOption[] = ["voice", "chat", "noticed", "info"];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="flex justify-between items-center p-4">
-        <div className="w-10" /> {/* Spacer for balance */}
+        <div className="w-10" />
         <LanguageSelector
           currentLanguage={language}
           onLanguageChange={onLanguageChange}
@@ -104,17 +105,17 @@ const EntryScreen = ({ language, onLanguageChange, onSelectOption }: EntryScreen
 
       {/* Main content */}
       <main className="flex-1 flex flex-col justify-center px-6 pb-8 max-w-lg mx-auto w-full">
-        {/* Greeting */}
-        <div className="text-center mb-10 animate-fade-in-up">
-          <h1 className="text-4xl font-semibold text-foreground mb-3">
-            {t.greeting}
-          </h1>
-          <p className="text-lg text-muted-foreground leading-relaxed text-balance">
-            {t.subtitle}
+        {/* Calming tagline */}
+        <div className="text-center mb-12 animate-fade-in-up">
+          <div className="w-16 h-16 rounded-full bg-tunza-sage-light mx-auto flex items-center justify-center mb-6">
+            <div className="w-8 h-8 rounded-full bg-primary/30 animate-breathe" />
+          </div>
+          <p className="text-lg text-foreground leading-relaxed text-balance max-w-sm mx-auto">
+            {t.tagline}
           </p>
         </div>
 
-        {/* Entry options */}
+        {/* Entry options - equal weight, large buttons */}
         <div className="space-y-4">
           {options.map((option, index) => {
             const Icon = icons[option];
@@ -125,12 +126,22 @@ const EntryScreen = ({ language, onLanguageChange, onSelectOption }: EntryScreen
                 key={option}
                 variant="entry"
                 className="w-full animate-fade-in-up"
-                style={{ animationDelay: `${(index + 1) * 100}ms` }}
+                style={{ animationDelay: `${(index + 1) * 80}ms` }}
                 onClick={() => onSelectOption(option)}
               >
                 <div className="flex items-center gap-4 w-full">
-                  <div className="w-12 h-12 rounded-full bg-tunza-sage-light flex items-center justify-center flex-shrink-0">
-                    <Icon className="h-5 w-5 text-primary" />
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    option === "voice" ? "bg-tunza-sage-light" :
+                    option === "chat" ? "bg-tunza-sky-light" :
+                    option === "noticed" ? "bg-tunza-earth-light" :
+                    "bg-secondary"
+                  }`}>
+                    <Icon className={`h-5 w-5 ${
+                      option === "voice" ? "text-primary" :
+                      option === "chat" ? "text-tunza-sky" :
+                      option === "noticed" ? "text-tunza-earth" :
+                      "text-muted-foreground"
+                    }`} />
                   </div>
                   <div className="text-left">
                     <div className="font-medium text-foreground">
@@ -150,9 +161,7 @@ const EntryScreen = ({ language, onLanguageChange, onSelectOption }: EntryScreen
       {/* Footer */}
       <footer className="p-6 text-center">
         <p className="text-xs text-muted-foreground">
-          {language === "en" && "Your privacy is protected. No login required."}
-          {language === "sw" && "Faragha yako inalindwa. Hakuna usajili unaohitajika."}
-          {language === "sheng" && "Privacy yako iko safe. Hakuna login needed."}
+          {t.privacy}
         </p>
       </footer>
     </div>
