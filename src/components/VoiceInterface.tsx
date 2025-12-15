@@ -306,7 +306,7 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: 
           <span className="sr-only">Back</span>
         </Button>
         <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">{t.languageLabel}</span>
+          <span className="text-small text-muted-foreground">{t.languageLabel}</span>
           <LanguageSelector
             currentLanguage={language}
             onLanguageChange={onLanguageChange}
@@ -321,22 +321,22 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: 
             // Idle state - Ready to start
             <div className="text-center animate-fade-in">
               <div className="mb-8">
-                <div className="w-32 h-32 rounded-full bg-tunza-sage-light mx-auto flex items-center justify-center animate-breathe">
-                  <Phone className="h-12 w-12 text-primary" />
+                <div className="w-36 h-36 rounded-full bg-sage-light mx-auto flex items-center justify-center animate-breathe">
+                  <Phone className="h-14 w-14 text-primary" />
                 </div>
               </div>
-              <h2 className="text-2xl font-medium text-foreground mb-2">
+              <h2 className="text-headline font-medium text-foreground mb-3">
                 {t.ready}
               </h2>
-              <p className="text-muted-foreground mb-8">
+              <p className="text-body text-muted-foreground mb-8">
                 {t.subtitle}
               </p>
               <div className="space-y-3">
                 <Button
                   variant="default"
-                  size="lg"
+                  size="xl"
                   onClick={startConversation}
-                  className="gap-3 w-full max-w-xs bg-primary hover:bg-primary/90"
+                  className="gap-3 w-full max-w-xs"
                 >
                   <Phone className="h-6 w-6" />
                   {t.start}
@@ -352,33 +352,33 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: 
                 </Button>
               </div>
               {voiceState === "error" && (
-                <p className="text-destructive text-sm mt-4">{t.error}</p>
+                <p className="text-amber text-small mt-4">{t.error}</p>
               )}
             </div>
           ) : voiceState === "connecting" ? (
             // Connecting state
             <div className="text-center animate-fade-in">
               <div className="mb-8">
-                <div className="w-32 h-32 rounded-full bg-tunza-sage-light mx-auto flex items-center justify-center">
-                  <Loader2 className="h-12 w-12 text-primary animate-spin" />
+                <div className="w-36 h-36 rounded-full bg-sage-light mx-auto flex items-center justify-center">
+                  <Loader2 className="h-14 w-14 text-primary animate-spin" />
                 </div>
               </div>
-              <h2 className="text-2xl font-medium text-foreground mb-3">
+              <h2 className="text-headline font-medium text-foreground mb-3">
                 {t.connecting}
               </h2>
-              <p className="text-muted-foreground">
+              <p className="text-body text-muted-foreground">
                 {t.reassurance}
               </p>
             </div>
           ) : (
             // Active state (listening, processing, or speaking)
             <div className="text-center animate-fade-in">
-              {/* Voice visualization */}
+              {/* Voice visualization - slow organic movement */}
               <div className="mb-8">
-                <div className="w-40 h-40 rounded-full bg-tunza-sage-light mx-auto flex items-center justify-center relative">
+                <div className="w-44 h-44 rounded-full bg-sage-light mx-auto flex items-center justify-center relative">
                   {voiceState === "speaking" ? (
-                    // AI is speaking - show animated waves
-                    <div className="flex items-center justify-center gap-1 h-12">
+                    // AI is speaking - show slow animated waves
+                    <div className="flex items-center justify-center gap-1.5 h-12">
                       {[...Array(7)].map((_, i) => (
                         <div
                           key={i}
@@ -388,21 +388,21 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: 
                       ))}
                     </div>
                   ) : voiceState === "processing" ? (
-                    // Processing - show loader
-                    <Loader2 className="h-12 w-12 text-primary animate-spin" />
+                    // Processing - show gentle loader
+                    <Loader2 className="h-14 w-14 text-primary animate-spin" />
                   ) : (
-                    // Listening - show mic with pulse
-                    <div className="w-16 h-16 rounded-full bg-primary/20 animate-pulse-gentle flex items-center justify-center">
-                      <Mic className="h-8 w-8 text-primary" />
+                    // Listening - show mic with gentle pulse
+                    <div className="w-20 h-20 rounded-full bg-primary/20 animate-pulse-gentle flex items-center justify-center">
+                      <Mic className="h-10 w-10 text-primary" />
                     </div>
                   )}
                   
-                  {/* Pulsing ring when active */}
-                  <div className="absolute inset-0 rounded-full border-4 border-primary/20 animate-pulse-gentle" />
+                  {/* Gentle pulsing ring when active */}
+                  <div className="absolute inset-0 rounded-full border-4 border-primary/15 animate-pulse-gentle" />
                 </div>
               </div>
 
-              <h2 className="text-2xl font-medium text-foreground mb-3">
+              <h2 className="text-headline font-medium text-foreground mb-3">
                 {voiceState === "speaking" 
                   ? t.speaking 
                   : voiceState === "processing"
@@ -412,36 +412,36 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: 
               
               {/* User transcript display */}
               {userTranscript && voiceState === "listening" && (
-                <div className="bg-card border border-border rounded-xl p-4 mb-4 max-w-xs mx-auto">
+                <div className="bg-card border border-border rounded-2xl p-4 mb-4 max-w-xs mx-auto">
                   <div className="flex items-center gap-2 mb-1">
                     <Mic className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">You</span>
+                    <span className="text-small text-muted-foreground">You</span>
                   </div>
-                  <p className="text-sm text-foreground">{userTranscript}</p>
+                  <p className="text-body text-foreground">{userTranscript}</p>
                 </div>
               )}
 
               {/* AI response display */}
               {aiResponse && voiceState === "speaking" && (
-                <div className="bg-tunza-sage-light border border-primary/20 rounded-xl p-4 mb-4 max-w-xs mx-auto">
+                <div className="bg-sage-light border border-primary/20 rounded-2xl p-4 mb-4 max-w-xs mx-auto">
                   <div className="flex items-center gap-2 mb-1">
                     <Volume2 className="h-3 w-3 text-primary" />
-                    <span className="text-xs text-primary">Tunza</span>
+                    <span className="text-small text-primary">Tunza</span>
                   </div>
-                  <p className="text-sm text-foreground">{aiResponse}</p>
+                  <p className="text-body text-foreground">{aiResponse}</p>
                 </div>
               )}
               
-              <p className="text-muted-foreground mb-8">
+              <p className="text-body text-muted-foreground mb-8">
                 {t.reassurance}
               </p>
 
-              {/* End button */}
+              {/* End button - uses amber, not red */}
               <Button
                 variant="outline"
                 size="lg"
                 onClick={endConversation}
-                className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/10"
+                className="gap-2 border-amber/30 text-amber hover:bg-amber-light"
               >
                 <PhoneOff className="h-5 w-5" />
                 {t.end}
@@ -453,7 +453,7 @@ const VoiceInterface = ({ language, onLanguageChange, onBack, onSwitchToChat }: 
 
       {/* Footer reassurance */}
       <footer className="p-6 text-center">
-        <p className="text-xs text-muted-foreground">
+        <p className="text-small text-muted-foreground">
           {t.privacy}
         </p>
       </footer>

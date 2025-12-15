@@ -114,15 +114,15 @@ const EntryScreen = ({ language, onLanguageChange, onSelectOption }: EntryScreen
       <main className="flex-1 flex flex-col justify-center px-6 pb-6 max-w-lg mx-auto w-full">
         {/* Calming tagline */}
         <div className="text-center mb-10 animate-fade-in-up">
-          <div className="w-14 h-14 rounded-full bg-tunza-sage-light mx-auto flex items-center justify-center mb-5">
-            <div className="w-6 h-6 rounded-full bg-primary/30 animate-breathe" />
+          <div className="w-16 h-16 rounded-full bg-sage-light mx-auto flex items-center justify-center mb-6">
+            <div className="w-7 h-7 rounded-full bg-primary/30 animate-breathe" />
           </div>
-          <p className="text-lg text-foreground leading-relaxed text-balance max-w-sm mx-auto">
+          <p className="text-subhead text-foreground leading-relaxed text-balance max-w-sm mx-auto">
             {t.tagline}
           </p>
         </div>
 
-        {/* Entry options */}
+        {/* Entry options - soft card layout */}
         <div className="space-y-3">
           {options.map((option, index) => {
             const optionContent = t.options[option];
@@ -136,10 +136,10 @@ const EntryScreen = ({ language, onLanguageChange, onSelectOption }: EntryScreen
                 onClick={() => onSelectOption(option)}
               >
                 <div className="flex items-center gap-4 w-full">
-                  <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 text-lg ${
-                    option === "voice" ? "bg-tunza-sage-light" :
-                    option === "chat" ? "bg-tunza-sky-light" :
-                    option === "noticed" ? "bg-tunza-earth-light" :
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-lg ${
+                    option === "voice" ? "bg-sage-light" :
+                    option === "chat" ? "bg-sky-light" :
+                    option === "noticed" ? "bg-amber-light" :
                     "bg-secondary"
                   }`}>
                     {optionContent.icon}
@@ -148,7 +148,7 @@ const EntryScreen = ({ language, onLanguageChange, onSelectOption }: EntryScreen
                     <div className="font-medium text-foreground">
                       {optionContent.title}
                     </div>
-                    <div className="text-sm text-muted-foreground mt-0.5">
+                    <div className="text-small text-muted-foreground mt-0.5">
                       {optionContent.description}
                     </div>
                   </div>
@@ -162,7 +162,7 @@ const EntryScreen = ({ language, onLanguageChange, onSelectOption }: EntryScreen
         <div className="mt-8 text-center animate-fade-in-up" style={{ animationDelay: "350ms" }}>
           <button
             onClick={() => onSelectOption("return")}
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center gap-2 text-small text-muted-foreground hover:text-foreground transition-colors"
           >
             <RotateCcw className="h-4 w-4" />
             {t.return}
@@ -172,7 +172,7 @@ const EntryScreen = ({ language, onLanguageChange, onSelectOption }: EntryScreen
 
       {/* Footer */}
       <footer className="p-6 text-center">
-        <p className="text-xs text-muted-foreground">
+        <p className="text-small text-muted-foreground">
           {t.privacy}
         </p>
       </footer>
