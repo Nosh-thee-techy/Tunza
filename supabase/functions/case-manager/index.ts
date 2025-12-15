@@ -194,6 +194,122 @@ serve(async (req) => {
         );
       }
 
+      case "delete": {
+        // User-controlled case deletion
+        if (!caseId) {
+          return new Response(
+            JSON.stringify({ error: "Case ID is required" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Verify case exists and PIN matches (if set)
+        const { data: caseToDelete } = await supabase
+          .from("cases")
+          .select("pin_hash")
+          .eq("case_id", caseId.toUpperCase())
+          .single();
+
+        if (!caseToDelete) {
+          return new Response(
+            JSON.stringify({ error: "Case not found" }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        if (caseToDelete.pin_hash) {
+          if (!pin) {
+            return new Response(
+              JSON.stringify({ error: "PIN required", requiresPin: true }),
+              { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+          
+          const providedHash = await hashPin(pin);
+          if (providedHash !== caseToDelete.pin_hash) {
+            return new Response(
+              JSON.stringify({ error: "Invalid PIN" }),
+              { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+        }
+
+        // Delete the case permanently
+        const { error } = await supabase
+          .from("cases")
+          .delete()
+          .eq("case_id", caseId.toUpperCase());
+
+        if (error) {
+          console.error("Error deleting case:", error);
+          throw error;
+        }
+
+        console.log("Case deleted:", caseId);
+        return new Response(
+          JSON.stringify({ success: true, message: "Case deleted permanently" }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      case "export": {
+        // Export case summary before deletion
+        if (!caseId) {
+          return new Response(
+            JSON.stringify({ error: "Case ID is required" }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Find and verify case
+        const { data: caseExport, error: fetchError } = await supabase
+          .from("cases")
+          .select("*")
+          .eq("case_id", caseId.toUpperCase())
+          .single();
+
+        if (fetchError || !caseExport) {
+          return new Response(
+            JSON.stringify({ error: "Case not found" }),
+            { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+
+        // Verify PIN if set
+        if (caseExport.pin_hash) {
+          if (!pin) {
+            return new Response(
+              JSON.stringify({ error: "PIN required", requiresPin: true }),
+              { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+          
+          const providedHash = await hashPin(pin);
+          if (providedHash !== caseExport.pin_hash) {
+            return new Response(
+              JSON.stringify({ error: "Invalid PIN" }),
+              { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+            );
+          }
+        }
+
+        // Generate exportable summary (without sensitive metadata)
+        const summary = {
+          case_id: caseExport.case_id,
+          created_at: caseExport.created_at,
+          language: caseExport.language,
+          context: caseExport.context,
+          message_count: Array.isArray(caseExport.messages) ? caseExport.messages.length : 0,
+          messages: caseExport.messages,
+        };
+
+        console.log("Case exported:", caseId);
+        return new Response(
+          JSON.stringify({ success: true, summary }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       default:
         return new Response(
           JSON.stringify({ error: "Invalid action" }),

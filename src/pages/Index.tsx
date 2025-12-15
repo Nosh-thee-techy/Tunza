@@ -110,6 +110,7 @@ const Index = () => {
           onLanguageChange={setLanguage}
           onBack={handleBack}
           onSwitchToChat={handleSwitchToChat}
+          onEmergencyTriggered={() => setCurrentScreen("emergency")}
         />
       )}
 
@@ -119,6 +120,7 @@ const Index = () => {
           onBack={handleBack}
           context={chatContext}
           initialMessages={loadedCase?.messages}
+          onEmergencyTriggered={() => setCurrentScreen("emergency")}
         />
       )}
 

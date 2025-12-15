@@ -1,9 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { ArrowLeft, Send, Save, MoreVertical } from "lucide-react";
+import { ArrowLeft, Send, Save, MoreVertical, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Language } from "./LanguageSelector";
 import SaveCaseDialog from "./SaveCaseDialog";
+import DeleteCaseDialog from "./DeleteCaseDialog";
 import { supabase } from "@/integrations/supabase/client";
+import { useRiskDetection } from "@/hooks/useRiskDetection";
 
 interface ChatInterfaceProps {
   language: Language;
@@ -12,6 +14,7 @@ interface ChatInterfaceProps {
   initialMessages?: Array<{ id: string; role: "assistant" | "user"; content: string }>;
   caseId?: string;
   casePin?: string;
+  onEmergencyTriggered?: () => void;
 }
 
 interface Message {
@@ -53,9 +56,9 @@ const quickReplies: Record<Language, string[]> = {
 };
 
 const menuContent = {
-  en: { save: "Save for later" },
-  sw: { save: "Hifadhi kwa baadaye" },
-  sheng: { save: "Save for later" },
+  en: { save: "Save for later", delete: "Delete conversation" },
+  sw: { save: "Hifadhi kwa baadaye", delete: "Futa mazungumzo" },
+  sheng: { save: "Save for later", delete: "Delete conversation" },
 };
 
 const ChatInterface = ({ 
@@ -64,7 +67,8 @@ const ChatInterface = ({
   context = "general", 
   initialMessages,
   caseId,
-  casePin 
+  casePin,
+  onEmergencyTriggered
 }: ChatInterfaceProps) => {
   const [messages, setMessages] = useState<Message[]>(
     initialMessages || initialWelcomeMessages[language]
@@ -74,10 +78,19 @@ const ChatInterface = ({
   const [showQuickReplies, setShowQuickReplies] = useState(!initialMessages);
   const [showMenu, setShowMenu] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [currentCaseId, setCurrentCaseId] = useState<string | undefined>(caseId);
   const [currentPin, setCurrentPin] = useState<string | undefined>(casePin);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Risk detection hook - triggers emergency flow on high risk
+  const { assessMessage } = useRiskDetection({
+    onHighRisk: () => {
+      console.log("High risk detected - triggering emergency flow");
+      onEmergencyTriggered?.();
+    },
+  });
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -192,6 +205,13 @@ const ChatInterface = ({
     setIsTyping(true);
     setShowQuickReplies(false);
 
+    // Assess risk silently in background
+    const messageHistory = newMessages.filter(m => m.id !== "welcome").map(m => ({ 
+      role: m.role, 
+      content: m.content 
+    }));
+    assessMessage(text.trim(), messageHistory);
+
     try {
       await streamChat(newMessages.filter((m) => m.id !== "welcome"));
     } catch (error) {
@@ -249,7 +269,7 @@ const ChatInterface = ({
             {showMenu && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
-                <div className="absolute top-full right-0 mt-1 bg-card border border-border rounded-2xl shadow-card z-50 overflow-hidden min-w-[160px] animate-fade-in">
+                <div className="absolute top-full right-0 mt-1 bg-card border border-border rounded-2xl shadow-card z-50 overflow-hidden min-w-[180px] animate-fade-in">
                   <button
                     onClick={() => {
                       setShowMenu(false);
@@ -260,6 +280,18 @@ const ChatInterface = ({
                     <Save className="h-4 w-4 text-muted-foreground" />
                     {menuContent[language].save}
                   </button>
+                  {currentCaseId && (
+                    <button
+                      onClick={() => {
+                        setShowMenu(false);
+                        setShowDeleteDialog(true);
+                      }}
+                      className="w-full text-left px-4 py-3 text-small flex items-center gap-3 hover:bg-secondary transition-colors text-amber"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {menuContent[language].delete}
+                    </button>
+                  )}
                 </div>
               </>
             )}
@@ -382,6 +414,20 @@ const ChatInterface = ({
           context={context}
           onClose={() => setShowSaveDialog(false)}
           onSaved={handleSaved}
+        />
+      )}
+
+      {/* Delete dialog */}
+      {showDeleteDialog && currentCaseId && (
+        <DeleteCaseDialog
+          language={language}
+          caseId={currentCaseId}
+          hasPin={!!currentPin}
+          onClose={() => setShowDeleteDialog(false)}
+          onDeleted={() => {
+            setShowDeleteDialog(false);
+            onBack();
+          }}
         />
       )}
     </>
