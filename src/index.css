@@ -6,114 +6,120 @@
 
 @layer base {
   :root {
-    /* SafeTalk KE - Calm, Trauma-Informed Palette */
-    /* Primary: Soft Sage #7FAEA3 */
-    --primary: 168 22% 59%;
-    --primary-foreground: 40 23% 97%;
+    /* Tunza - Calm, Trauma-Informed Palette */
+    /* Primary: Tunza Sage Green #6B9B8A */
+    --primary: 156 20% 51%;
+    --primary-foreground: 45 33% 97%;
     
-    /* Secondary: Warm Sand #F3EFEA */
-    --secondary: 33 23% 93%;
-    --secondary-foreground: 0 0% 18%;
+    /* Secondary: Warm Sand/Peach #D4B896 */
+    --secondary: 34 40% 71%;
+    --secondary-foreground: 160 30% 18%;
     
-    /* Background - Off-white, no pure white (reduce glare) */
-    --background: 40 23% 97%;
-    --foreground: 0 0% 18%;
+    /* Background - Warm cream #FAF8F5 */
+    --background: 45 33% 97%;
+    --foreground: 160 30% 18%;
     
     /* Card - Slightly warmer */
-    --card: 33 23% 95%;
-    --card-foreground: 0 0% 18%;
+    --card: 40 30% 95%;
+    --card-foreground: 160 30% 18%;
     
-    --popover: 40 23% 97%;
-    --popover-foreground: 0 0% 18%;
+    --popover: 45 33% 97%;
+    --popover-foreground: 160 30% 18%;
     
     /* Muted */
-    --muted: 33 15% 92%;
-    --muted-foreground: 215 14% 42%;
+    --muted: 34 25% 90%;
+    --muted-foreground: 160 15% 40%;
     
-    /* Accent: Muted Sky #AFC7D8 */
-    --accent: 206 35% 77%;
-    --accent-foreground: 0 0% 18%;
+    /* Accent: Darker Sand/Copper #C4A77D */
+    --accent: 34 40% 63%;
+    --accent-foreground: 160 30% 18%;
     
     /* Destructive - Soft Amber, NEVER red */
-    --destructive: 40 76% 63%;
-    --destructive-foreground: 0 0% 18%;
+    --destructive: 34 50% 55%;
+    --destructive-foreground: 160 30% 18%;
     
-    --border: 33 15% 88%;
-    --input: 33 15% 90%;
-    --ring: 168 22% 59%;
+    --border: 34 20% 85%;
+    --input: 34 20% 88%;
+    --ring: 156 20% 51%;
     
     --radius: 1rem;
     
-    /* SafeTalk Custom Tokens */
-    --sage: 168 22% 59%;
-    --sage-light: 168 30% 94%;
-    --sand: 33 23% 93%;
-    --sand-light: 40 23% 97%;
-    --sky: 206 35% 77%;
-    --sky-light: 206 40% 95%;
-    --charcoal: 0 0% 18%;
-    --slate: 215 14% 42%;
-    --amber: 40 76% 63%;
-    --amber-light: 40 60% 94%;
+    /* Tunza Custom Tokens */
+    --sage: 156 20% 51%;
+    --sage-light: 156 25% 92%;
+    --sage-dark: 160 35% 25%;
+    --sand: 34 40% 71%;
+    --sand-light: 45 33% 97%;
+    --peach: 34 50% 72%;
+    --peach-light: 34 45% 92%;
+    --copper: 34 40% 63%;
+    --copper-light: 34 35% 88%;
+    --charcoal: 160 30% 18%;
+    --slate: 160 15% 40%;
+    --amber: 34 50% 55%;
+    --amber-light: 34 40% 92%;
     
     /* Shadows - Soft and non-alarming */
-    --shadow-soft: 0 4px 20px -4px hsl(0 0% 18% / 0.06);
-    --shadow-card: 0 8px 32px -8px hsl(0 0% 18% / 0.08);
-    --shadow-gentle: 0 2px 12px -2px hsl(168 22% 59% / 0.15);
+    --shadow-soft: 0 4px 20px -4px hsl(160 30% 18% / 0.06);
+    --shadow-card: 0 8px 32px -8px hsl(160 30% 18% / 0.08);
+    --shadow-gentle: 0 2px 12px -2px hsl(156 20% 51% / 0.15);
     
     /* Transitions - Gentle, never jarring */
     --transition-gentle: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     --transition-slow: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-background: 45 33% 97%;
+    --sidebar-foreground: 160 30% 18%;
+    --sidebar-primary: 156 20% 51%;
+    --sidebar-primary-foreground: 45 33% 97%;
+    --sidebar-accent: 34 25% 90%;
+    --sidebar-accent-foreground: 160 30% 18%;
+    --sidebar-border: 34 20% 85%;
+    --sidebar-ring: 156 20% 51%;
   }
 
   .dark {
-    --primary: 168 25% 55%;
-    --primary-foreground: 0 0% 12%;
+    --primary: 156 22% 50%;
+    --primary-foreground: 160 30% 10%;
     
-    --secondary: 25 12% 20%;
-    --secondary-foreground: 33 23% 88%;
+    --secondary: 34 25% 25%;
+    --secondary-foreground: 34 40% 85%;
     
-    --background: 0 0% 12%;
-    --foreground: 33 23% 92%;
+    --background: 160 30% 10%;
+    --foreground: 34 30% 90%;
     
-    --card: 0 0% 15%;
-    --card-foreground: 33 23% 92%;
+    --card: 160 25% 14%;
+    --card-foreground: 34 30% 90%;
     
-    --popover: 0 0% 12%;
-    --popover-foreground: 33 23% 92%;
+    --popover: 160 30% 10%;
+    --popover-foreground: 34 30% 90%;
     
-    --muted: 0 0% 18%;
-    --muted-foreground: 215 10% 60%;
+    --muted: 160 20% 18%;
+    --muted-foreground: 156 15% 60%;
     
-    --accent: 206 30% 50%;
-    --accent-foreground: 33 23% 92%;
+    --accent: 34 30% 45%;
+    --accent-foreground: 34 30% 90%;
     
-    --destructive: 40 60% 50%;
-    --destructive-foreground: 33 23% 92%;
+    --destructive: 34 45% 45%;
+    --destructive-foreground: 34 30% 90%;
     
-    --border: 0 0% 22%;
-    --input: 0 0% 22%;
-    --ring: 168 25% 55%;
+    --border: 160 15% 22%;
+    --input: 160 15% 22%;
+    --ring: 156 22% 50%;
     
-    --sage: 168 25% 55%;
-    --sage-light: 168 15% 20%;
-    --sand: 25 12% 18%;
-    --sand-light: 0 0% 12%;
-    --sky: 206 25% 45%;
-    --sky-light: 206 15% 20%;
-    --charcoal: 33 23% 92%;
-    --slate: 215 10% 60%;
-    --amber: 40 60% 50%;
-    --amber-light: 40 30% 20%;
+    --sage: 156 22% 50%;
+    --sage-light: 156 15% 20%;
+    --sage-dark: 160 35% 12%;
+    --sand: 34 20% 22%;
+    --sand-light: 160 30% 10%;
+    --peach: 34 30% 35%;
+    --peach-light: 34 20% 18%;
+    --copper: 34 30% 45%;
+    --copper-light: 34 20% 22%;
+    --charcoal: 34 30% 90%;
+    --slate: 156 15% 60%;
+    --amber: 34 45% 45%;
+    --amber-light: 34 20% 20%;
   }
 }
 

@@ -57,18 +57,23 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // SafeTalk custom colors
+        // Tunza custom colors
         sage: {
           DEFAULT: "hsl(var(--sage))",
           light: "hsl(var(--sage-light))",
+          dark: "hsl(var(--sage-dark))",
         },
         sand: {
           DEFAULT: "hsl(var(--sand))",
           light: "hsl(var(--sand-light))",
         },
-        sky: {
-          DEFAULT: "hsl(var(--sky))",
-          light: "hsl(var(--sky-light))",
+        peach: {
+          DEFAULT: "hsl(var(--peach))",
+          light: "hsl(var(--peach-light))",
+        },
+        copper: {
+          DEFAULT: "hsl(var(--copper))",
+          light: "hsl(var(--copper-light))",
         },
         charcoal: "hsl(var(--charcoal))",
         slate: "hsl(var(--slate))",
