@@ -1,8 +1,9 @@
-import { Eye, Phone, MessageCircle, Info } from "lucide-react";
+import { useState } from "react";
+import { RotateCcw } from "lucide-react";
 import { Button } from "./ui/button";
 import LanguageSelector, { Language } from "./LanguageSelector";
 
-type EntryOption = "noticed" | "voice" | "chat" | "info";
+type EntryOption = "noticed" | "voice" | "chat" | "info" | "return";
 
 interface EntryScreenProps {
   language: Language;
@@ -17,20 +18,25 @@ const content = {
       voice: {
         title: "Talk now",
         description: "Have a voice conversation",
+        icon: "🎙️",
       },
       chat: {
         title: "Chat instead",
-        description: "Text with someone who understands",
+        description: "Text with someone who listens",
+        icon: "💬",
       },
       noticed: {
         title: "I noticed something concerning",
         description: "About someone else",
+        icon: "👁️",
       },
       info: {
         title: "Just looking for information",
-        description: "Learn about support and resources",
+        description: "Learn about support available",
+        icon: "ℹ️",
       },
     },
+    return: "Return to a saved conversation",
     privacy: "Your privacy is protected. No login required.",
   },
   sw: {
@@ -39,20 +45,25 @@ const content = {
       voice: {
         title: "Ongea sasa",
         description: "Mazungumzo ya sauti",
+        icon: "🎙️",
       },
       chat: {
         title: "Chat badala yake",
-        description: "Andika na mtu anayeelewa",
+        description: "Andika na mtu anayesikiliza",
+        icon: "💬",
       },
       noticed: {
         title: "Nimeona jambo la kusumbua",
         description: "Kuhusu mtu mwingine",
+        icon: "👁️",
       },
       info: {
         title: "Natafuta habari tu",
-        description: "Jifunze kuhusu msaada na rasilimali",
+        description: "Jifunze kuhusu msaada unaopatikana",
+        icon: "ℹ️",
       },
     },
+    return: "Rudi kwenye mazungumzo yaliyohifadhiwa",
     privacy: "Faragha yako inalindwa. Hakuna usajili unaohitajika.",
   },
   sheng: {
@@ -60,37 +71,33 @@ const content = {
     options: {
       voice: {
         title: "Ongea sasa",
-        description: "Voice conversation, moja kwa moja",
+        description: "Voice conversation",
+        icon: "🎙️",
       },
       chat: {
         title: "Chat badala",
-        description: "Text na mtu anakuelewa",
+        description: "Text na mtu anaskia",
+        icon: "💬",
       },
       noticed: {
         title: "Nime-notice kitu weird",
         description: "Kuhusu mtu mwingine",
+        icon: "👁️",
       },
       info: {
         title: "Natafuta info tu",
         description: "Pata habari kuhusu msaada",
+        icon: "ℹ️",
       },
     },
+    return: "Rudi kwa saved convo",
     privacy: "Privacy yako iko safe. Hakuna login needed.",
   },
 };
 
-const icons = {
-  voice: Phone,
-  chat: MessageCircle,
-  noticed: Eye,
-  info: Info,
-};
-
 const EntryScreen = ({ language, onLanguageChange, onSelectOption }: EntryScreenProps) => {
   const t = content[language];
-
-  // Order of options matches the workflow
-  const options: EntryOption[] = ["voice", "chat", "noticed", "info"];
+  const options: Array<"voice" | "chat" | "noticed" | "info"> = ["voice", "chat", "noticed", "info"];
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -104,21 +111,20 @@ const EntryScreen = ({ language, onLanguageChange, onSelectOption }: EntryScreen
       </header>
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col justify-center px-6 pb-8 max-w-lg mx-auto w-full">
+      <main className="flex-1 flex flex-col justify-center px-6 pb-6 max-w-lg mx-auto w-full">
         {/* Calming tagline */}
-        <div className="text-center mb-12 animate-fade-in-up">
-          <div className="w-16 h-16 rounded-full bg-tunza-sage-light mx-auto flex items-center justify-center mb-6">
-            <div className="w-8 h-8 rounded-full bg-primary/30 animate-breathe" />
+        <div className="text-center mb-10 animate-fade-in-up">
+          <div className="w-14 h-14 rounded-full bg-tunza-sage-light mx-auto flex items-center justify-center mb-5">
+            <div className="w-6 h-6 rounded-full bg-primary/30 animate-breathe" />
           </div>
           <p className="text-lg text-foreground leading-relaxed text-balance max-w-sm mx-auto">
             {t.tagline}
           </p>
         </div>
 
-        {/* Entry options - equal weight, large buttons */}
-        <div className="space-y-4">
+        {/* Entry options */}
+        <div className="space-y-3">
           {options.map((option, index) => {
-            const Icon = icons[option];
             const optionContent = t.options[option];
             
             return (
@@ -126,22 +132,17 @@ const EntryScreen = ({ language, onLanguageChange, onSelectOption }: EntryScreen
                 key={option}
                 variant="entry"
                 className="w-full animate-fade-in-up"
-                style={{ animationDelay: `${(index + 1) * 80}ms` }}
+                style={{ animationDelay: `${(index + 1) * 60}ms` }}
                 onClick={() => onSelectOption(option)}
               >
                 <div className="flex items-center gap-4 w-full">
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+                  <div className={`w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 text-lg ${
                     option === "voice" ? "bg-tunza-sage-light" :
                     option === "chat" ? "bg-tunza-sky-light" :
                     option === "noticed" ? "bg-tunza-earth-light" :
                     "bg-secondary"
                   }`}>
-                    <Icon className={`h-5 w-5 ${
-                      option === "voice" ? "text-primary" :
-                      option === "chat" ? "text-tunza-sky" :
-                      option === "noticed" ? "text-tunza-earth" :
-                      "text-muted-foreground"
-                    }`} />
+                    {optionContent.icon}
                   </div>
                   <div className="text-left">
                     <div className="font-medium text-foreground">
@@ -155,6 +156,17 @@ const EntryScreen = ({ language, onLanguageChange, onSelectOption }: EntryScreen
               </Button>
             );
           })}
+        </div>
+
+        {/* Return link */}
+        <div className="mt-8 text-center animate-fade-in-up" style={{ animationDelay: "350ms" }}>
+          <button
+            onClick={() => onSelectOption("return")}
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <RotateCcw className="h-4 w-4" />
+            {t.return}
+          </button>
         </div>
       </main>
 
