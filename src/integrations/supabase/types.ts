@@ -14,13 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      cases: {
+        Row: {
+          case_id: string
+          context: string | null
+          created_at: string
+          id: string
+          language: string
+          last_accessed_at: string | null
+          messages: Json
+          pin_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          case_id: string
+          context?: string | null
+          created_at?: string
+          id?: string
+          language?: string
+          last_accessed_at?: string | null
+          messages?: Json
+          pin_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          case_id?: string
+          context?: string | null
+          created_at?: string
+          id?: string
+          language?: string
+          last_accessed_at?: string | null
+          messages?: Json
+          pin_hash?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_case_id: { Args: never; Returns: string }
     }
     Enums: {
       [_ in never]: never

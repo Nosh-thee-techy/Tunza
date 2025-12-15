@@ -7,3 +7,7 @@ verify_jwt = false
 [functions.voice-session]
 enabled = true
 verify_jwt = false
+
+[functions.case-manager]
+enabled = true
+verify_jwt = false
